@@ -170,3 +170,4 @@ Edit [`scripts/setup.sh`](scripts/setup.sh) to add/remove packages. Note that th
   ```
 
   Specify the correct `<branch>` and `<version>` values.
+mine
