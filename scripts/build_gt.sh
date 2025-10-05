@@ -9,10 +9,6 @@ mount -o bind /dev/ ${CHROOT}/dev/
 mount -o bind /dev/pts/ ${CHROOT}/dev/pts/
 mount -o bind /run ${CHROOT}/run/
 
-echo "--- DEBUG: Listing contents of ${CHROOT}/lib ---"
-ls -l ${CHROOT}/lib
-echo "--- DEBUG: End of listing ---"
-
 # install gt dependencies
 chroot ${CHROOT} qemu-aarch64-static /bin/sh \
     -c " apt update; apt install libconfig-dev -y"

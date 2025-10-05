@@ -52,12 +52,12 @@ sed -i '/\[main\]/a dns=dnsmasq' ${CHROOT}/etc/NetworkManager/NetworkManager.con
 
 # enable autoconnect for usb0
 cat << EOF > ${CHROOT}/etc/udev/rules.d/99-nm-usb0.rules
-SUBSYSTEM=="net", ACTION=="add|change|move", ENV{DEVTYPE}=="gadget", ENV{NM_UNMANAGED}="0"
+SUBSYSTEM=="net", ACTION=="add|change|move", ENV{DEVTYPE}=="gadget", ENV{NM_UNMANAGED}=="0"
 EOF
 
 # install kernel
 wget -O - https://github.com/aliosjohnson-svg/linuxkernel/releases/download/last/kernel.tar.gz \
-    | tar zxf - -C ${CHROOT} --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
+    | tar zxf - -C ${CHROOT}/lib --strip-components=1 --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
 
 mkdir -p ${CHROOT}/boot/extlinux
 cp configs/extlinux.conf ${CHROOT}/boot/extlinux
@@ -73,7 +73,3 @@ echo "PARTUUID=80780b1d-0fe1-27d3-23e4-9244e62f8c46\t/boot\text2\tdefaults\t0 2"
 
 # backup rootfs
 tar cpzf rootfs.tgz --exclude="usr/bin/qemu-aarch64-static" -C rootfs .
-
-echo "--- DEBUG: Listing contents of ${CHROOT}/lib at the end of debootstrap.sh ---"
-ls -l ${CHROOT}/lib
-echo "--- DEBUG: End of listing ---"
