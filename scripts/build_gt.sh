@@ -3,6 +3,12 @@
 CHROOT=${CHROOT=$(pwd)/rootfs}
 SRCDIR=$(pwd)/src
 
+mount -t proc proc ${CHROOT}/proc/
+mount -t sysfs sys ${CHROOT}/sys/
+mount -o bind /dev/ ${CHROOT}/dev/
+mount -o bind /dev/pts/ ${CHROOT}/dev/pts/
+mount -o bind /run ${CHROOT}/run/
+
 # install gt dependencies
 chroot ${CHROOT} qemu-aarch64-static /bin/sh \
     -c " apt update; apt install libconfig-dev -y"
@@ -44,3 +50,8 @@ rm -rf dist/usr/share dist/usr/lib/cmake dist/usr/lib/pkgconfig \
     dist/usr/lib/*a dist/usr/bin/ga* dist/usr/bin/s* dist/usr/include
 
 cp -a configs/templates dist/etc/gt
+
+# cleanup
+for a in proc sys dev/pts dev run; do
+    umount ${CHROOT}/${a}
+done;
