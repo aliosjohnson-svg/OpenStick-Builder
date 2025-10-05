@@ -1,9 +1,7 @@
-name: Build and Release
+name: Build
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -32,11 +30,8 @@ jobs:
       - name: Create images
         run: sudo sh -e scripts/build_images.sh
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          files: files/*
-          tag_name: ${{ github.run_number }}
-          body: "Release based on commit ${{ github.sha }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: openstick-debian
+          path: files/*
