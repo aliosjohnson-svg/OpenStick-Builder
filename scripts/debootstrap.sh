@@ -57,7 +57,7 @@ EOF
 
 # install kernel
 wget -O - https://github.com/aliosjohnson-svg/linuxkernel/releases/download/last/kernel.tar.gz \
-    | tar zxf - -C ${CHROOT}/lib --strip-components=1 --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
+    | tar xkzf - -C ${CHROOT} --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
 
 mkdir -p ${CHROOT}/boot/extlinux
 cp configs/extlinux.conf ${CHROOT}/boot/extlinux
