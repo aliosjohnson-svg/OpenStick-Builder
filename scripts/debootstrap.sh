@@ -68,7 +68,7 @@ cp -a configs/msm8916-usb-gadget.sh ${CHROOT}/usr/sbin/
 cp configs/msm8916-usb-gadget.conf ${CHROOT}/etc/
 
 # setup systemd services
-cp -a configs/system/* ${CHROOT}/etc/systemd/system
+#cp -a configs/system/* ${CHROOT}/etc/systemd/system
 
 cp -a scripts/msm-firmware-loader.sh ${CHROOT}/usr/sbin
 
