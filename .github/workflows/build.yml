@@ -2,9 +2,34 @@ name: Build
 
 on:
   workflow_dispatch:
+    inputs:
+      device:
+        description: 'Target device'
+        required: true
+        type: choice
+        default: uz801
+        options:
+          - uz801
+          - ufi001c
+          - ufi001b
+          - jz02v10
+          - ufi103s
+          - qrzl903
+          - w001
+          - ufi003
+          - mf32
+          - mf601
+          - wf2
+          - sp970v11
+          - sp970v10
   push:
     tags:
       - 'v*'
+
+env:
+  DEVICE: ${{ github.event.inputs.device || 'uz801' }}
+  IMMORTALWRT_URL: https://github.com/xuxin1955/immortalwrt
+  IMMORTALWRT_BRANCH: master
 
 jobs:
   build:
@@ -18,14 +43,24 @@ jobs:
       - name: Install dependencies
         run: sudo sh -e scripts/install_deps.sh
 
+      - name: Build MSM8916 kernel from immortalwrt
+        run: sudo sh -e scripts/build_kernel.sh
+        env:
+          IMMORTALWRT_URL: ${{ env.IMMORTALWRT_URL }}
+          IMMORTALWRT_BRANCH: ${{ env.IMMORTALWRT_BRANCH }}
+
       - name: Build hyp and aboot firmware
         run: sudo sh -e scripts/build_hyp_aboot.sh
+        env:
+          DEVICE: ${{ env.DEVICE }}
 
       - name: Extract firmware
         run: sudo sh -e scripts/extract_fw.sh
 
       - name: Create rootfs
         run: sudo sh -e scripts/debootstrap.sh
+        env:
+          DEVICE: ${{ env.DEVICE }}
 
       - name: Build gadget-tool
         run: sudo sh -e scripts/build_gt.sh
@@ -36,15 +71,15 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: openstick-debian
+          name: openstick-debian-${{ env.DEVICE }}
           path: files/*
 
       - name: Create Release with gh CLI (alternative approach)
         if: startsWith(github.ref, 'refs/tags/') && true
         run: |
           gh release create ${{ github.ref_name }} \
-            --title "Release ${{ github.ref_name }}" \
-            --notes "Automated release for ${{ github.ref_name }}" \
+            --title "Release ${{ github.ref_name }} - ${{ env.DEVICE }}" \
+            --notes "Debian Bookworm for ${{ env.DEVICE }} (MSM8916)" \
             files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

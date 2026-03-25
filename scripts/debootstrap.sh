@@ -77,15 +77,50 @@ cp configs/*.nmconnection ${CHROOT}/etc/NetworkManager/system-connections
 chmod 0600 ${CHROOT}/etc/NetworkManager/system-connections/*
 cp configs/99-custom.conf ${CHROOT}/etc/NetworkManager/conf.d/
 
-# install kernel
-wget -O - https://mirror.postmarketos.org/postmarketos/master/aarch64/linux-postmarketos-qcom-msm8916-6.12.1-r3.apk \
-    | tar xkzf - -C ${CHROOT} --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
+# Map device → kernel DTB filename.
+# DTBs come from the locally compiled immortalwrt kernel; repo dtbs/ are
+# used as extras/overrides for devices not yet upstream in the kernel.
+DEVICE="${DEVICE:-uz801}"
+get_kernel_dtb() {
+    case "$1" in
+        uz801)    echo "msm8916-yiming-uz801v3.dtb"  ;;
+        ufi001c)  echo "msm8916-thwc-ufi001c.dtb"    ;;
+        ufi001b)  echo "msm8916-thwc-ufi001b.dtb"    ;;
+        jz02v10)  echo "msm8916-jz01-45-v33.dtb"     ;;
+        ufi103s)  echo "msm8916-thwc-ufi103s.dtb"    ;;
+        qrzl903)  echo "msm8916-yiming-uz801v3.dtb"  ;;
+        w001)     echo "msm8916-yiming-uz801v3.dtb"  ;;
+        ufi003)   echo "msm8916-thwc-ufi003.dtb"     ;;
+        mf32)     echo "msm8916-fy-mf800.dtb"        ;;
+        mf601)    echo "msm8916-fy-mf800.dtb"        ;;
+        wf2)      echo "msm8916-yiming-uz801v3.dtb"  ;;
+        sp970v11) echo "msm8916-yiming-uz801v3.dtb"  ;;
+        sp970v10) echo "msm8916-yiming-uz801v3.dtb"  ;;
+        *)        echo "msm8916-yiming-uz801v3.dtb"  ;;
+    esac
+}
+KERNEL_DTB="$(get_kernel_dtb "${DEVICE}")"
+
+# install kernel from locally compiled immortalwrt build
+echo "[rootfs] Installing kernel (device: ${DEVICE}, DTB: ${KERNEL_DTB})..."
+tar xpzf files/kernel.tar.gz -C ${CHROOT}
+
+# copy repo-provided custom DTBs — these supplement/override kernel DTBs
+# for devices whose DTS is not yet merged upstream
+cp dtbs/* ${CHROOT}/boot/dtbs/qcom/ 2>/dev/null || true
+
+# verify the selected DTB exists; fall back to uz801 if missing
+if [ ! -f "${CHROOT}/boot/dtbs/qcom/${KERNEL_DTB}" ]; then
+    echo "[rootfs] WARNING: ${KERNEL_DTB} not found; falling back to msm8916-yiming-uz801v3.dtb"
+    KERNEL_DTB="msm8916-yiming-uz801v3.dtb"
+fi
 
 mkdir -p ${CHROOT}/boot/extlinux
-cp configs/extlinux.conf ${CHROOT}/boot/extlinux
-
-# copy custom dtb's
-cp dtbs/* ${CHROOT}/boot/dtbs/qcom/
+cat > ${CHROOT}/boot/extlinux/extlinux.conf << EOF
+linux /vmlinuz
+fdt /dtbs/qcom/${KERNEL_DTB}
+append earlycon root=PARTUUID=a7ab80e8-e9d1-e8cd-f157-93f69b1d141e console=ttyMSM0,115200 no_framebuffer=true rw rootwait
+EOF
 
 # create missing directory
 mkdir -p ${CHROOT}/lib/firmware/msm-firmware-loader
